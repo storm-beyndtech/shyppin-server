@@ -835,3 +835,89 @@ export async function multiMails(emails, subject, message) {
 		return { error: error instanceof Error && error.message };
 	}
 }
+
+// Send bulk email to multiple recipients with personalization
+export async function sendBulkEmail(recipients, subject, message) {
+	try {
+		const results = [];
+		
+		for (const recipient of recipients) {
+			// Replace {{name}} placeholder with actual name
+			const personalizedMessage = message.replace(/\{\{name\}\}/g, recipient.name || 'Valued Customer');
+			
+			let bodyContent = `
+        <td style="padding: 20px; line-height: 1.8;">
+          ${personalizedMessage.split('\n').map(line => `<p>${line}</p>`).join('')}
+          <p>
+            If you have questions or need assistance, reach out 
+            to our support team at support@shyppin.com.
+          </p>
+          <p>Best regards</p>
+          <p>The Shyppin Team</p>
+        </td>
+      `;
+
+			let mailOptions = {
+				from: `Shyppin ${process.env.SMTP_USER}`,
+				to: recipient.email,
+				subject: subject,
+				html: emailTemplate(bodyContent),
+			};
+
+			try {
+				const result = await sendMailWithRetry(mailOptions);
+				results.push({
+					email: recipient.email,
+					status: 'sent',
+					result
+				});
+			} catch (error) {
+				results.push({
+					email: recipient.email,
+					status: 'failed',
+					error: error.message
+				});
+			}
+		}
+		
+		return results;
+	} catch (error) {
+		return { error: error instanceof Error && error.message };
+	}
+}
+
+// Send contact form email to admin
+export async function sendContactEmail(contactData) {
+	try {
+		const { name, email, phone, subject, message } = contactData;
+		
+		let bodyContent = `
+      <td style="padding: 20px; line-height: 1.8;">
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone}</p>
+        <p><strong>Subject:</strong> ${subject}</p>
+        <p><strong>Message:</strong></p>
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          ${message.split('\n').map(line => `<p>${line}</p>`).join('')}
+        </div>
+        <p><strong>Submitted at:</strong> ${new Date().toLocaleString()}</p>
+      </td>
+    `;
+
+		let mailOptions = {
+			from: `Shyppin Contact Form <${process.env.SMTP_USER}>`,
+			to: process.env.SMTP_USER, // Send to admin
+			subject: `New Contact Form: ${subject}`,
+			html: emailTemplate(bodyContent),
+			replyTo: email // Allow admin to reply directly to customer
+		};
+
+		const result = await sendMailWithRetry(mailOptions);
+		return { success: true, result };
+	} catch (error) {
+		console.error("Contact email error:", error);
+		return { success: false, error: error instanceof Error ? error.message : error };
+	}
+}

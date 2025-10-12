@@ -9,7 +9,9 @@ import cors from "cors";
 import { verifyTransporter } from "./utils/emailConfig.js";
 import usersRoutes from "./routes/users.js";
 import shipmentsRoutes from "./routes/shipments.js";
-import utilsRoutes from "./routes/utils.js";
+import quotesRoutes from "./routes/quotes.js";
+import mailRoutes from "./routes/mail.js";
+import contactRoutes from "./routes/contact.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -43,7 +45,9 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/users", usersRoutes);
 app.use("/api/shipments", shipmentsRoutes);
-app.use("/api/utils", utilsRoutes);
+app.use("/api/quotes", quotesRoutes);
+app.use("/api/mail", mailRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Listening to port
 const PORT = process.env.PORT || 5000;

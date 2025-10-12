@@ -49,72 +49,18 @@ export const userSchema = new mongoose.Schema({
 		default: "United States",
 	},
 
-	documentFront: { type: String },
-	documentBack: { type: String },
-	documentNumber: { type: String },
-	documentExpDate: { type: String },
-
 	password: {
 		type: String,
 		required: true,
 		minLength: 5,
 		maxLength: 1000,
 	},
-	deposit: {
-		type: Number,
-		default: 0,
-		minLength: 0,
-	},
-	interest: {
-		type: Number,
-		default: 0,
-		minLength: 0,
-	},
-	withdraw: {
-		type: Number,
-		default: 0,
-		minLength: 0,
-	},
-	bonus: {
-		type: Number,
-		default: 0,
-		minLength: 0,
-	},
 	profileImage: {
 		type: String,
 		default: "",
 		maxLength: 500,
 	},
-	referral: {
-		type: {
-			code: String,
-			status: { type: String, enum: ["claimed", "none", "pending"], default: "none" },
-		},
-		default: () => ({ code: "", status: "none" }),
-	},
-	kycStatus: {
-		type: String,
-		enum: ["notSubmitted", "pending", "approved", "rejected"],
-		default: "notSubmitted",
-	},
-	accountStatus: {
-		type: String,
-		enum: ["active", "pending", "suspended", "deactivated"],
-		default: "active",
-	},
 	isAdmin: {
-		type: Boolean,
-		default: false,
-	},
-	mfa: {
-		type: Boolean,
-		default: false,
-	},
-	idVerified: {
-		type: Boolean,
-		default: false,
-	},
-	isEmailVerified: {
 		type: Boolean,
 		default: false,
 	},

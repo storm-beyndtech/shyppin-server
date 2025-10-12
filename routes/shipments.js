@@ -51,6 +51,28 @@ router.post("/", auth, async (req, res) => {
 	}
 });
 
+// Update entire shipment (admin only)
+router.put("/:id", auth, async (req, res) => {
+	try {
+		const { id } = req.params;
+		const updateData = req.body;
+		
+		const shipment = await Shipment.findByIdAndUpdate(
+			id,
+			{ ...updateData, updatedAt: new Date() },
+			{ new: true, runValidators: true }
+		);
+		
+		if (!shipment) {
+			return res.status(404).json({ message: "Shipment not found" });
+		}
+		
+		res.json(shipment);
+	} catch (error) {
+		res.status(400).json({ message: error.message });
+	}
+});
+
 // Update shipment status
 router.put("/:id/status", auth, async (req, res) => {
 	try {

@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import express from "express";
 import { User } from "../models/user.js";
-import { passwordResetCode, passwordResetConfirmation, referralJoin, welcomeMail } from "../utils/mailer.js";
+import { passwordResetCode, passwordResetConfirmation } from "../utils/mailer.js";
 import speakeasy from "speakeasy";
 import qrcode from "qrcode";
 
@@ -38,26 +38,6 @@ router.get("/getQrcode", async (req, res) => {
 	qrcode.toDataURL(secret.otpauth_url, (err, data) => {
 		res.send({ imgSrc: data, secret });
 	});
-});
-
-// GET /referrals/:username
-router.get("/referrals/:username", async (req, res) => {
-	const { username } = req.params;
-
-	try {
-		// Find all users referred by the given username
-		const referrals = await User.find({ referredBy: username }).select("username createdAt");
-
-		res.status(200).json(
-			referrals.map((ref) => ({
-				username: ref.username,
-				date: ref.createdAt,
-			})),
-		);
-	} catch (error) {
-		console.error("Error fetching referrals:", error);
-		res.status(500).json({ message: "Server error while fetching referrals." });
-	}
 });
 
 router.get("/:id", async (req, res) => {
@@ -105,20 +85,23 @@ router.post("/login", async (req, res) => {
 		});
 		if (!user) return res.status(400).send({ message: "user not found" });
 
-		const validatePassword = bcrypt.compare(password, user.password);
+		const validatePassword = await bcrypt.compare(password, user.password);
 		if (!validatePassword) return res.status(400).send({ message: "Invalid password" });
 
+		// Generate JWT token
+		const token = user.genAuthToken();
+		
 		const { password: _, ...userData } = user.toObject();
-		res.send({ message: "success", user: userData });
+		res.send({ message: "success", user: userData, token });
 	} catch (error) {
-		for (i in e.errors) res.status(500).send({ message: e.errors[i].message });
-		console.log(e.errors[0].message);
+		console.log(error);
+		res.status(500).send({ message: "Something went wrong during login" });
 	}
 });
 
-// signup
-router.post("/signup", async (req, res) => {
-	const { firstName, lastName, username, email, password, country, phone, referrer } = req.body;
+// Admin-only user creation (no public signup since users aren't onboarded)
+router.post("/create-user", async (req, res) => {
+	const { firstName, lastName, username, email, password, country, phone } = req.body;
 
 	try {
 		// Check for existing user
@@ -126,7 +109,7 @@ router.post("/signup", async (req, res) => {
 		if (existingUser) {
 			return res
 				.status(400)
-				.send({ success: false, message: "Username or email already exists. Please login." });
+				.send({ success: false, message: "Username or email already exists." });
 		}
 
 		// Hash password
@@ -135,17 +118,6 @@ router.post("/signup", async (req, res) => {
 
 		// Create and save new user
 		const user = new User({ firstName, lastName, username, email, password: hashedPassword, country, phone });
-		if (referrer) {
-			const referrerUser = await User.findOne({ username: referrer });
-			if (referrerUser) {
-				user.referral = {
-					code: referrerUser.username,
-					status: "pending",
-				};
-
-				await referralJoin(referrerUser.email, referrerUser.fullName, user.username, new Date());
-			}
-		}
 		await user.save();
 
 		// Respond with user (excluding password)
@@ -153,7 +125,7 @@ router.post("/signup", async (req, res) => {
 		return res.send({ success: true, user: userData });
 	} catch (e) {
 		console.error(e);
-		const message = e.message || "Something went wrong during signup.";
+		const message = e.message || "Something went wrong during user creation.";
 		return res.status(500).send({ success: false, message });
 	}
 });
