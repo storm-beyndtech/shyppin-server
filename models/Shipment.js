@@ -12,7 +12,7 @@ const trackingEventSchema = new mongoose.Schema({
 	status: {
 		type: String,
 		required: true,
-		enum: ["picked-up", "in-transit", "arrived", "out-for-delivery", "delivered", "delayed", "exception"]
+		enum: ["pending", "picked-up", "in-transit", "arrived", "out-for-delivery", "delivered", "delayed", "exception"]
 	},
 	description: {
 		type: String,
