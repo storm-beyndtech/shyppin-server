@@ -44,12 +44,12 @@ async function seedAdmin() {
       isEmailVerified: true,
       accountStatus: "active",
       kycStatus: "approved",
-      country: "United States",
-      phone: "+1-800-SHYPPIN",
-      city: "San Francisco",
-      state: "CA",
-      zipCode: "94105",
-      streetAddress: "123 Logistics Avenue"
+      country: "UAE",
+      phone: "+1 (562) 522-3628",
+      city: "Downtown Dubai",
+      state: "Dubai",
+      zipCode: "",
+      streetAddress: "Boulevard Plaza Tower 1, Sheikh Mohammed bin Rashid Boulevard"
     });
 
     // Save the admin user
